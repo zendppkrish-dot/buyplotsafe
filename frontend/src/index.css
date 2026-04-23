@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+    /* Kerala-Inspired Colors */
+    --color-kerala-green: #009A4E;
+    /* Forests */
+    --color-coastal-blue: #8ED8F8;
+    /* Water */
+    --color-safety-alert: #FAA61A;
+    /* Warnings */
+    --color-earth-deep: #261D14;
+    /* Text/Dark Mode */
+
+    /* Custom Glassmorphism Blurs */
+    --blur-glass: 12px;
+    --blur-glass-heavy: 24px;
+}
+
+/* Custom Glass Utility */
+@utility glass-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(var(--blur-glass));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
+@layer base {
+    body {
+        background-color: var(--color-earth-deep);
+        color: white;
+    }
+}

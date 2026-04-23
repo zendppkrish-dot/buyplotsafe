@@ -1,0 +1,20 @@
+{
+  "name": "buyplotsafe-root",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Root runner for BuyPlotSafe project",
+  "scripts": {
+    "frontend": "npm run dev --prefix frontend",
+    "backend": "cd backend && python -m uvicorn main:app --reload",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\"",
+    "start-all": "npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "three": "^0.183.2"
+  }
+}

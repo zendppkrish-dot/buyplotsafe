@@ -1,0 +1,397 @@
+[
+    {
+        "id": "barricade-doorway-a_fbx",
+        "label": "Barricade-Doorway-A",
+        "path": "assets/house_parts/house parts kit/Barricade/barricade-doorway-a.fbx"
+    },
+    {
+        "id": "barricade-window-a_fbx",
+        "label": "Barricade-Window-A",
+        "path": "assets/house_parts/house parts kit/Barricade/barricade-window-a.fbx"
+    },
+    {
+        "id": "barricade-window-b_fbx",
+        "label": "Barricade-Window-B",
+        "path": "assets/house_parts/house parts kit/Barricade/barricade-window-b.fbx"
+    },
+    {
+        "id": "barricade-window-c_fbx",
+        "label": "Barricade-Window-C",
+        "path": "assets/house_parts/house parts kit/Barricade Window C/barricade-window-c.fbx"
+    },
+    {
+        "id": "barricade-doorway-c_fbx",
+        "label": "Barricade-Doorway-C",
+        "path": "assets/house_parts/house parts kit/Barricade-3UZHUnkzTu/barricade-doorway-c.fbx"
+    },
+    {
+        "id": "barricade-doorway-b_fbx",
+        "label": "Barricade-Doorway-B",
+        "path": "assets/house_parts/house parts kit/Barricade-QaTdfgKDbK/barricade-doorway-b.fbx"
+    },
+    {
+        "id": "border_fbx",
+        "label": "Border",
+        "path": "assets/house_parts/house parts kit/Border/border.fbx"
+    },
+    {
+        "id": "border-corner_fbx",
+        "label": "Border-Corner",
+        "path": "assets/house_parts/house parts kit/Border Corner/border-corner.fbx"
+    },
+    {
+        "id": "border-corner-diagonal_fbx",
+        "label": "Border-Corner-Diagonal",
+        "path": "assets/house_parts/house parts kit/Border Corner Diagon/border-corner-diagonal.fbx"
+    },
+    {
+        "id": "border-corner-round_fbx",
+        "label": "Border-Corner-Round",
+        "path": "assets/house_parts/house parts kit/Border Corner Round/border-corner-round.fbx"
+    },
+    {
+        "id": "border-corner-small_fbx",
+        "label": "Border-Corner-Small",
+        "path": "assets/house_parts/house parts kit/Border Corner Small/border-corner-small.fbx"
+    },
+    {
+        "id": "border-high_fbx",
+        "label": "Border-High",
+        "path": "assets/house_parts/house parts kit/Border High/border-high.fbx"
+    },
+    {
+        "id": "border-high-corner_fbx",
+        "label": "Border-High-Corner",
+        "path": "assets/house_parts/house parts kit/Border High Corner/border-high-corner.fbx"
+    },
+    {
+        "id": "border-high-corner-diagonal_fbx",
+        "label": "Border-High-Corner-Diagonal",
+        "path": "assets/house_parts/house parts kit/Border High Corner D/border-high-corner-diagonal.fbx"
+    },
+    {
+        "id": "border-high-corner-round_fbx",
+        "label": "Border-High-Corner-Round",
+        "path": "assets/house_parts/house parts kit/Border High Corner R/border-high-corner-round.fbx"
+    },
+    {
+        "id": "border-high-corner-small_fbx",
+        "label": "Border-High-Corner-Small",
+        "path": "assets/house_parts/house parts kit/Border High Corner S/border-high-corner-small.fbx"
+    },
+    {
+        "id": "column_fbx",
+        "label": "Column",
+        "path": "assets/house_parts/house parts kit/Column/column.fbx"
+    },
+    {
+        "id": "column-thin_fbx",
+        "label": "Column-Thin",
+        "path": "assets/house_parts/house parts kit/Column Thin/column-thin.fbx"
+    },
+    {
+        "id": "column-wide_fbx",
+        "label": "Column-Wide",
+        "path": "assets/house_parts/house parts kit/Column Wide/column-wide.fbx"
+    },
+    {
+        "id": "plating-detailed-wide_fbx",
+        "label": "Plating-Detailed-Wide",
+        "path": "assets/house_parts/house parts kit/Corrugated Iron Sheet/plating-detailed-wide.fbx"
+    },
+    {
+        "id": "plating-detailed_fbx",
+        "label": "Plating-Detailed",
+        "path": "assets/house_parts/house parts kit/Corrugated Iron Sheet/plating-detailed.fbx"
+    },
+    {
+        "id": "plating-wide_fbx",
+        "label": "Plating-Wide",
+        "path": "assets/house_parts/house parts kit/Corrugated Iron Sheet/plating-wide.fbx"
+    },
+    {
+        "id": "plating_fbx",
+        "label": "Plating",
+        "path": "assets/house_parts/house parts kit/Corrugated Iron Sheet/plating.fbx"
+    },
+    {
+        "id": "detail-pipe_fbx",
+        "label": "Detail-Pipe",
+        "path": "assets/house_parts/house parts kit/Detail Pipe/detail-pipe.fbx"
+    },
+    {
+        "id": "floor_fbx",
+        "label": "Floor",
+        "path": "assets/house_parts/house parts kit/Floor/floor.fbx"
+    },
+    {
+        "id": "floor-corner-diagonal_fbx",
+        "label": "Floor-Corner-Diagonal",
+        "path": "assets/house_parts/house parts kit/Floor Corner Diagona/floor-corner-diagonal.fbx"
+    },
+    {
+        "id": "floor-corner-round_fbx",
+        "label": "Floor-Corner-Round",
+        "path": "assets/house_parts/house parts kit/Floor Corner Round/floor-corner-round.fbx"
+    },
+    {
+        "id": "floor-half_fbx",
+        "label": "Floor-Half",
+        "path": "assets/house_parts/house parts kit/Floor Half/floor-half.fbx"
+    },
+    {
+        "id": "floor-quarter_fbx",
+        "label": "Floor-Quarter",
+        "path": "assets/house_parts/house parts kit/Floor Quarter/floor-quarter.fbx"
+    },
+    {
+        "id": "door-rotate-square-b_fbx",
+        "label": "Door-Rotate-Square-B",
+        "path": "assets/house_parts/house parts kit/Grey Door/door-rotate-square-b.fbx"
+    },
+    {
+        "id": "gutter-vertical_fbx",
+        "label": "Gutter-Vertical",
+        "path": "assets/house_parts/house parts kit/Gutter Vertical/gutter-vertical.fbx"
+    },
+    {
+        "id": "gutter-vertical-bottom_fbx",
+        "label": "Gutter-Vertical-Bottom",
+        "path": "assets/house_parts/house parts kit/Gutter Vertical Bottom/gutter-vertical-bottom.fbx"
+    },
+    {
+        "id": "gutter-vertical-short_fbx",
+        "label": "Gutter-Vertical-Short",
+        "path": "assets/house_parts/house parts kit/Gutter Vertical Short/gutter-vertical-short.fbx"
+    },
+    {
+        "id": "gutter-vertical-top_fbx",
+        "label": "Gutter-Vertical-Top",
+        "path": "assets/house_parts/house parts kit/Gutter Vertical Top/gutter-vertical-top.fbx"
+    },
+    {
+        "id": "gutter-vertical-wall_fbx",
+        "label": "Gutter-Vertical-Wall",
+        "path": "assets/house_parts/house parts kit/Gutter Vertical Wall/gutter-vertical-wall.fbx"
+    },
+    {
+        "id": "door-rotate-square-d_fbx",
+        "label": "Door-Rotate-Square-D",
+        "path": "assets/house_parts/house parts kit/Modern door/door-rotate-square-d.fbx"
+    },
+    {
+        "id": "door-rotate-round-a_fbx",
+        "label": "Door-Rotate-Round-A",
+        "path": "assets/house_parts/house parts kit/Red Door/door-rotate-round-a.fbx"
+    },
+    {
+        "id": "door-rotate-square-a_fbx",
+        "label": "Door-Rotate-Square-A",
+        "path": "assets/house_parts/house parts kit/Red Door/door-rotate-square-a.fbx"
+    },
+    {
+        "id": "roof-flat-center_fbx",
+        "label": "Roof-Flat-Center",
+        "path": "assets/house_parts/house parts kit/Roof Flat Center/roof-flat-center.fbx"
+    },
+    {
+        "id": "roof-flat-corner_fbx",
+        "label": "Roof-Flat-Corner",
+        "path": "assets/house_parts/house parts kit/Roof Flat Corner/roof-flat-corner.fbx"
+    },
+    {
+        "id": "roof-flat-corner-inner_fbx",
+        "label": "Roof-Flat-Corner-Inner",
+        "path": "assets/house_parts/house parts kit/Roof Flat Corner Inn/roof-flat-corner-inner.fbx"
+    },
+    {
+        "id": "roof-flat-patch_fbx",
+        "label": "Roof-Flat-Patch",
+        "path": "assets/house_parts/house parts kit/Roof Flat Patch/roof-flat-patch.fbx"
+    },
+    {
+        "id": "roof-flat-patch-large_fbx",
+        "label": "Roof-Flat-Patch-Large",
+        "path": "assets/house_parts/house parts kit/Roof Flat Patch Larg/roof-flat-patch-large.fbx"
+    },
+    {
+        "id": "roof-flat-side_fbx",
+        "label": "Roof-Flat-Side",
+        "path": "assets/house_parts/house parts kit/Roof Flat Side/roof-flat-side.fbx"
+    },
+    {
+        "id": "roof-flat-square_fbx",
+        "label": "Roof-Flat-Square",
+        "path": "assets/house_parts/house parts kit/Roof Flat Square/roof-flat-square.fbx"
+    },
+    {
+        "id": "door-rotate-round-d_fbx",
+        "label": "Door-Rotate-Round-D",
+        "path": "assets/house_parts/house parts kit/Rounded Door/door-rotate-round-d.fbx"
+    },
+    {
+        "id": "stairs-center_fbx",
+        "label": "Stairs-Center",
+        "path": "assets/house_parts/house parts kit/Stairs Center/stairs-center.fbx"
+    },
+    {
+        "id": "stairs-center-short_fbx",
+        "label": "Stairs-Center-Short",
+        "path": "assets/house_parts/house parts kit/Stairs Center Short/stairs-center-short.fbx"
+    },
+    {
+        "id": "stairs-closed_fbx",
+        "label": "Stairs-Closed",
+        "path": "assets/house_parts/house parts kit/Stairs Closed/stairs-closed.fbx"
+    },
+    {
+        "id": "stairs-closed-short_fbx",
+        "label": "Stairs-Closed-Short",
+        "path": "assets/house_parts/house parts kit/Stairs Closed Short/stairs-closed-short.fbx"
+    },
+    {
+        "id": "stairs-open_fbx",
+        "label": "Stairs-Open",
+        "path": "assets/house_parts/house parts kit/Stairs Open/stairs-open.fbx"
+    },
+    {
+        "id": "stairs-open-short_fbx",
+        "label": "Stairs-Open-Short",
+        "path": "assets/house_parts/house parts kit/Stairs Open Short/stairs-open-short.fbx"
+    },
+    {
+        "id": "stairs-sides_fbx",
+        "label": "Stairs-Sides",
+        "path": "assets/house_parts/house parts kit/Stairs Sides/stairs-sides.fbx"
+    },
+    {
+        "id": "stairs-sides-short_fbx",
+        "label": "Stairs-Sides-Short",
+        "path": "assets/house_parts/house parts kit/Stairs Sides Short/stairs-sides-short.fbx"
+    },
+    {
+        "id": "wall_fbx",
+        "label": "Wall",
+        "path": "assets/house_parts/house parts kit/Wall/wall.fbx"
+    },
+    {
+        "id": "wall-corner_fbx",
+        "label": "Wall-Corner",
+        "path": "assets/house_parts/house parts kit/Wall Corner/wall-corner.fbx"
+    },
+    {
+        "id": "wall-corner-column_fbx",
+        "label": "Wall-Corner-Column",
+        "path": "assets/house_parts/house parts kit/Wall Corner Column/wall-corner-column.fbx"
+    },
+    {
+        "id": "wall-corner-column-bottom_fbx",
+        "label": "Wall-Corner-Column-Bottom",
+        "path": "assets/house_parts/house parts kit/Wall Corner Column B/wall-corner-column-bottom.fbx"
+    },
+    {
+        "id": "wall-corner-column-small-bottom_fbx",
+        "label": "Wall-Corner-Column-Small-Bottom",
+        "path": "assets/house_parts/house parts kit/Wall Corner Column S/wall-corner-column-small-bottom.fbx"
+    },
+    {
+        "id": "wall-corner-column-small_fbx",
+        "label": "Wall-Corner-Column-Small",
+        "path": "assets/house_parts/house parts kit/Wall Corner Column S/wall-corner-column-small.fbx"
+    },
+    {
+        "id": "wall-corner-diagonal_fbx",
+        "label": "Wall-Corner-Diagonal",
+        "path": "assets/house_parts/house parts kit/Wall Corner Diagonal/wall-corner-diagonal.fbx"
+    },
+    {
+        "id": "wall-corner-round_fbx",
+        "label": "Wall-Corner-Round",
+        "path": "assets/house_parts/house parts kit/Wall Corner Round/wall-corner-round.fbx"
+    },
+    {
+        "id": "wall-doorway-round_fbx",
+        "label": "Wall-Doorway-Round",
+        "path": "assets/house_parts/house parts kit/Wall Doorway Round/wall-doorway-round.fbx"
+    },
+    {
+        "id": "wall-doorway-square_fbx",
+        "label": "Wall-Doorway-Square",
+        "path": "assets/house_parts/house parts kit/Wall Doorway Square/wall-doorway-square.fbx"
+    },
+    {
+        "id": "wall-doorway-wide-square_fbx",
+        "label": "Wall-Doorway-Wide-Square",
+        "path": "assets/house_parts/house parts kit/Wall Doorway Wide/wall-doorway-wide-square.fbx"
+    },
+    {
+        "id": "wall-doorway-wide-round_fbx",
+        "label": "Wall-Doorway-Wide-Round",
+        "path": "assets/house_parts/house parts kit/Wall Doorway Wide Ro/wall-doorway-wide-round.fbx"
+    },
+    {
+        "id": "wall-half_fbx",
+        "label": "Wall-Half",
+        "path": "assets/house_parts/house parts kit/Wall Half/wall-half.fbx"
+    },
+    {
+        "id": "wall-low_fbx",
+        "label": "Wall-Low",
+        "path": "assets/house_parts/house parts kit/Wall Low/wall-low.fbx"
+    },
+    {
+        "id": "wall-window-round_fbx",
+        "label": "Wall-Window-Round",
+        "path": "assets/house_parts/house parts kit/Wall Window Round/wall-window-round.fbx"
+    },
+    {
+        "id": "wall-window-round-detailed_fbx",
+        "label": "Wall-Window-Round-Detailed",
+        "path": "assets/house_parts/house parts kit/Wall Window Round De/wall-window-round-detailed.fbx"
+    },
+    {
+        "id": "wall-window-square_fbx",
+        "label": "Wall-Window-Square",
+        "path": "assets/house_parts/house parts kit/Wall Window Square/wall-window-square.fbx"
+    },
+    {
+        "id": "wall-window-square-detailed_fbx",
+        "label": "Wall-Window-Square-Detailed",
+        "path": "assets/house_parts/house parts kit/Wall Window Square D/wall-window-square-detailed.fbx"
+    },
+    {
+        "id": "wall-window-wide-round-detailed_fbx",
+        "label": "Wall-Window-Wide-Round-Detailed",
+        "path": "assets/house_parts/house parts kit/Wall Window Wide/wall-window-wide-round-detailed.fbx"
+    },
+    {
+        "id": "wall-window-wide-square-detailed_fbx",
+        "label": "Wall-Window-Wide-Square-Detailed",
+        "path": "assets/house_parts/house parts kit/Wall Window Wide/wall-window-wide-square-detailed.fbx"
+    },
+    {
+        "id": "wall-window-wide-square_fbx",
+        "label": "Wall-Window-Wide-Square",
+        "path": "assets/house_parts/house parts kit/Wall Window Wide/wall-window-wide-square.fbx"
+    },
+    {
+        "id": "wall-window-wide-round_fbx",
+        "label": "Wall-Window-Wide-Round",
+        "path": "assets/house_parts/house parts kit/Wall Window Wide Rou/wall-window-wide-round.fbx"
+    },
+    {
+        "id": "door-rotate-round-b_fbx",
+        "label": "Door-Rotate-Round-B",
+        "path": "assets/house_parts/house parts kit/White door/door-rotate-round-b.fbx"
+    },
+    {
+        "id": "door-rotate-square-c_fbx",
+        "label": "Door-Rotate-Square-C",
+        "path": "assets/house_parts/house parts kit/Wooden Door/door-rotate-square-c.fbx"
+    },
+    {
+        "id": "door-rotate-round-c_fbx",
+        "label": "Door-Rotate-Round-C",
+        "path": "assets/house_parts/house parts kit/Wooden Door Rounded/door-rotate-round-c.fbx"
+    }
+]

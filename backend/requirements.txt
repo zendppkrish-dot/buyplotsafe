@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic
+trimesh
+scipy
+numpy
+networkx
+python-multipart
+firebase-admin
+sqlalchemy
+python-jose[cryptography]
+passlib[bcrypt]
