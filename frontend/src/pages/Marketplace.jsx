@@ -5,10 +5,15 @@ import { Canvas } from '@react-three/fiber';
 import { Stage, useGLTF, Environment, OrbitControls } from '@react-three/drei';
 import { KeralaHouse } from '../components/KeralaHouse';
 import PlotCard from '../components/PlotCard';
+import HomeMapSearch from '../components/HomeMapSearch';
 
 const Marketplace = () => {
     const [user, setUser] = useState(null);
     const [plots, setPlots] = useState([]);
+    const [adminPlots, setAdminPlots] = useState(() => {
+        const saved = localStorage.getItem('admin_plots');
+        return saved ? JSON.parse(saved) : [];
+    });
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [previewLoading, setPreviewLoading] = useState(false);
@@ -55,6 +60,14 @@ const Marketplace = () => {
         };
 
         fetchPlots();
+
+        // Listen for admin updates
+        const handleAdminUpdate = () => {
+            const saved = localStorage.getItem('admin_plots');
+            if (saved) setAdminPlots(JSON.parse(saved));
+        };
+        window.addEventListener('admin_plots_updated', handleAdminUpdate);
+        return () => window.removeEventListener('admin_plots_updated', handleAdminUpdate);
     }, [navigate]);
 
     const handleLogout = () => {
@@ -62,7 +75,9 @@ const Marketplace = () => {
         navigate('/login');
     };
 
-    const filteredPlots = plots.filter(plot =>
+    const combinedPlots = [...plots, ...adminPlots];
+
+    const filteredPlots = combinedPlots.filter(plot =>
         plot.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
         plot.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -133,29 +148,30 @@ const Marketplace = () => {
                     </div>
                 )}
 
-                {/* Grid */}
+                {/* Results Section */}
                 {!loading && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredPlots.length > 0 ? (
-                            filteredPlots.map((plot) => (
-                                <PlotCard key={plot.id} plot={plot} />
-                            ))
-                        ) : (
-                            <div className="col-span-full bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-3xl p-20 text-center">
-                                <PlusCircle className="w-16 h-16 text-slate-700 mx-auto mb-6" />
-                                <h3 className="text-2xl font-bold text-slate-300 mb-2">No Plots Found</h3>
-                                <p className="text-slate-500 mb-8 max-w-sm mx-auto">Upload your first plot to start assessing risks and designing your future home.</p>
-                                <button 
-                                    onClick={() => navigate('/add-plot')}
-                                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-900/20 active:scale-95"
-                                >
-                                    Upload Your First Plot
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                    filteredPlots.length > 0 ? (
+                        <HomeMapSearch plots={filteredPlots} />
+                    ) : (
+                        <div className="col-span-full bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-3xl p-20 text-center">
+                            <PlusCircle className="w-16 h-16 text-slate-700 mx-auto mb-6" />
+                            <h3 className="text-2xl font-bold text-slate-300 mb-2">No Plots Found</h3>
+                            <p className="text-slate-500 mb-8 max-w-sm mx-auto">Upload your first plot to start assessing risks and designing your future home.</p>
+                            <button 
+                                onClick={() => navigate('/add-plot')}
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-900/20 active:scale-95"
+                            >
+                                Upload Your First Plot
+                            </button>
+                        </div>
+                    )
                 )}
             </main>
+
+            {/* Footer */}
+            <footer className="max-w-7xl mx-auto px-6 py-12 border-t border-white/5 text-center text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em]">
+                <div>© 2026 BUYPLOT SAFE • KERALA LAND INTELLIGENCE</div>
+            </footer>
 
             {/* --- 3D Preview Modal --- (Keep existing logic but styled consistently) */}
             {show3DModal && (

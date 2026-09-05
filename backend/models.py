@@ -24,6 +24,8 @@ class Plot(Base):
     image_url = Column(String)
     risk_score = Column(String)
     description = Column(Text)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
     seller_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     
@@ -31,5 +33,7 @@ class Plot(Base):
     house_z = Column(Float, nullable=True)
     house_layout = Column(Text, nullable=True) # JSON array of active components
     glb_url = Column(String, nullable=True)
+    risk_override_score = Column(Float, nullable=True)
+    risk_override_level = Column(String, nullable=True)
 
     seller = relationship("User", back_populates="plots")

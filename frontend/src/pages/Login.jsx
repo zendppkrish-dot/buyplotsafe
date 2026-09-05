@@ -88,8 +88,17 @@ const Login = () => {
                     </button>
                 </form>
 
-                <div className="mt-6 text-center text-slate-400">
-                    Don't have an account? <Link to="/signup" className="text-emerald-400 hover:underline">Sign up</Link>
+                <div className="mt-6 text-center text-slate-400 text-sm">
+                    Don't have an account? <Link to="/signup" className="text-emerald-400 hover:underline font-bold">Sign up</Link>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-white/5 text-center">
+                    <button 
+                        onClick={() => navigate('/admin-login')}
+                        className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-[0.2em] transition-colors"
+                    >
+                        Administrative Access
+                    </button>
                 </div>
             </div>
         </div>

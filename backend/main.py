@@ -15,6 +15,7 @@ import base64
 import io
 import trimesh
 import numpy as np
+import re
 
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, get_db
@@ -56,6 +57,33 @@ def update_schema():
         except Exception:
             print("[SCHEMA] Adding glb_url column to plots table...")
             conn.execute(text("ALTER TABLE plots ADD COLUMN glb_url TEXT"))
+        # Check if latitude exists
+        try:
+            conn.execute(text("SELECT latitude FROM plots LIMIT 1"))
+        except Exception:
+            print("[SCHEMA] Adding latitude column to plots table...")
+            conn.execute(text("ALTER TABLE plots ADD COLUMN latitude FLOAT"))
+
+        # Check if longitude exists
+        try:
+            conn.execute(text("SELECT longitude FROM plots LIMIT 1"))
+        except Exception:
+            print("[SCHEMA] Adding longitude column to plots table...")
+            conn.execute(text("ALTER TABLE plots ADD COLUMN longitude FLOAT"))
+
+        # Check if risk_override_score exists
+        try:
+            conn.execute(text("SELECT risk_override_score FROM plots LIMIT 1"))
+        except Exception:
+            print("[SCHEMA] Adding risk_override_score column to plots table...")
+            conn.execute(text("ALTER TABLE plots ADD COLUMN risk_override_score FLOAT"))
+
+        # Check if risk_override_level exists
+        try:
+            conn.execute(text("SELECT risk_override_level FROM plots LIMIT 1"))
+        except Exception:
+            print("[SCHEMA] Adding risk_override_level column to plots table...")
+            conn.execute(text("ALTER TABLE plots ADD COLUMN risk_override_level TEXT"))
         
         conn.commit()
 
@@ -89,12 +117,21 @@ app.add_middleware(
 
 # --- Data & Config ---
 
-# High Risk Zones (e.g., Wayanad Landslide Areas)
-# format: {lat, lng, radius_km, name}
+# High Risk Zones (Kerala State Disaster Management Authority - KSDMA Informed)
+# Categories: Landslide Prone (Wayanad, Idukki), Flood Prone (Alappuzha, Thrissur, Ernakulam)
 HIGH_RISK_ZONES = [
-    {"lat": 11.5833, "lng": 76.1333, "radius": 5, "name": "Meppadi, Wayanad"},
-    {"lat": 11.8333, "lng": 75.9667, "radius": 4, "name": "Mananthavady, Wayanad"},
-    {"lat": 11.6000, "lng": 76.0833, "radius": 3, "name": "Chooralmala, Wayanad"},
+    # Landslide Prone (High Altitude)
+    {"lat": 11.5833, "lng": 76.1333, "radius": 5, "name": "Meppadi, Wayanad (Landslide Prone)"},
+    {"lat": 11.6000, "lng": 76.0833, "radius": 3, "name": "Chooralmala, Wayanad (Landslide Prone)"},
+    {"lat": 10.0500, "lng": 77.0600, "radius": 6, "name": "Munnar, Idukki (Landslide Prone)"},
+    {"lat": 9.7100, "lng": 76.9800, "radius": 4, "name": "Kuttikanam, Idukki (Landslide Prone)"},
+    
+    # Flood Prone (Low Lying / Coastal)
+    {"lat": 9.3500, "lng": 76.4000, "radius": 10, "name": "Kuttanad, Alappuzha (Severe Flood Zone)"},
+    {"lat": 9.4981, "lng": 76.3323, "radius": 5, "name": "Alappuzha Town (Flood Prone)"},
+    {"lat": 10.2100, "lng": 76.2000, "radius": 7, "name": "Chalakudy, Thrissur (Riverine Flood Zone)"},
+    {"lat": 10.0261, "lng": 76.3125, "radius": 4, "name": "Kochi/Aluva, Ernakulam (Tidal/Riverine Flood Zone)"},
+    {"lat": 9.5916, "lng": 76.5221, "radius": 3, "name": "Kottayam Lowlands (Flood Prone)"}
 ]
 
 
@@ -151,6 +188,9 @@ async def get_current_user(authorization: str = Header(None), db: Session = Depe
     
     user = db.query(models.User).filter(models.User.email == email).first()
     if user is None:
+        # Special case for hardcoded admin if not in DB yet
+        if email == "admin123@gmail.com":
+            return models.User(email=email, full_name="System Administrator", id=999)
         raise HTTPException(status_code=401, detail="User not found")
         
     return user
@@ -187,6 +227,13 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
     
     access_token = auth_utils.create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/api/auth/admin-login", response_model=Token)
+async def admin_login(credentials: UserLogin):
+    if credentials.email == "admin123@gmail.com" and credentials.password == "admin123":
+        access_token = auth_utils.create_access_token(data={"sub": credentials.email})
+        return {"access_token": access_token, "token_type": "bearer"}
+    raise HTTPException(status_code=401, detail="Invalid admin credentials")
 
 @app.get("/api")
 def read_root():
@@ -227,7 +274,7 @@ def generate_plot_3d(dimensions: PlotDimensions):
 
 def calculate_risk_score(lat: float, lng: float):
     """
-    Checks coordinates against High Risk Zones and calculates a Safety Score (1-10).
+    Checks coordinates against KSDMA High Risk Zones and calculates a Safety Score (1-10).
     1 = High Risk/Unsafe, 10 = Very Safe.
     """
     min_dist = float('inf')
@@ -242,23 +289,103 @@ def calculate_risk_score(lat: float, lng: float):
 
     # 2. Handle case where HIGH_RISK_ZONES might be empty
     if not nearest_zone:
-        return 10.0, "Safe", "No hazard data available."
+        return 10.0, "Safe", "No major geospatial hazards detected in the local KSDMA dataset."
 
     # 3. Calculate a Dynamic Score (1-10)
-    # Using 1.8 as a multiplier so 5km away ≈ Score 10
-    dynamic_score = round(float(min(10.0, 1.0 + (min_dist * 1.8))), 1) # type: ignore
+    # Using 1.5 as a multiplier for more sensitive risk detection
+    # Radius-based weighting
+    zone_radius = nearest_zone.get("radius", 5)
+    
+    # If within radius, score drops significantly.
+    if min_dist <= zone_radius:
+        dynamic_score = round(max(1.0, 1.0 + (min_dist / zone_radius) * 2.5), 1)
+    else:
+        # Increase the score more gradually so plots don't all saturate at 10.0.
+        distance_outside_zone = min_dist - zone_radius
+        normalized_distance = min(distance_outside_zone, 60.0) / 60.0
+        dynamic_score = round(3.5 + (normalized_distance * 6.5), 1)
 
-    if dynamic_score <= 3:
+    if dynamic_score <= 3.5:
         level = "High Risk"
-        details = f"Critical proximity ({float(round(float(min_dist), 2))}km) to {str(nearest_zone['name'])}." # type: ignore
-    elif dynamic_score <= 7:
+        hazard_type = "Landslide" if "Landslide" in nearest_zone['name'] else "Flood"
+        details = f"KSDMA ALERT: Critical proximity ({round(float(min_dist), 2)}km) to {nearest_zone['name']}. Construction highly restricted."
+    elif dynamic_score <= 7.0:
         level = "Moderate Risk"
-        details = f"Buffer zone of {str(nearest_zone['name'])}. Caution advised for heavy construction." # type: ignore
+        details = f"GEOSPATIAL WARNING: Located in the buffer zone of {nearest_zone['name']}. Soil stability/Drainage audit required."
     else:
         level = "Safe"
-        details = "No major high-risk geospatial hazards detected within 5km."
+        details = f"Verified Safe Zone. Sufficient clearance from known KSDMA {nearest_zone['name'].split('(')[-1].replace(')', '') if '(' in nearest_zone['name'] else 'hazard'} zones."
 
     return dynamic_score, level, details
+
+def parse_legacy_risk_score(risk_score: Optional[str]) -> float:
+    if not risk_score:
+        return 0.0
+    match = re.search(r"Score:\s*([\d.]+)", risk_score)
+    if not match:
+        return 0.0
+    return float(match.group(1))
+
+def get_plot_risk_snapshot(plot: models.Plot) -> dict:
+    override_score = getattr(plot, "risk_override_score", None)
+    override_level = getattr(plot, "risk_override_level", None)
+    if override_score is not None:
+        safety_score = float(override_score)
+        if override_level:
+            risk_level = override_level
+        elif safety_score <= 3.5:
+            risk_level = "High Risk"
+        elif safety_score <= 7.0:
+            risk_level = "Moderate Risk"
+        else:
+            risk_level = "Safe"
+
+        return {
+            "risk_score": f"{risk_level} (Score: {round(safety_score, 1)})",
+            "risk_level": risk_level,
+            "safety_score": round(safety_score, 1),
+            "description": plot.description or "",
+        }
+
+    has_coordinates = plot.latitude is not None and plot.longitude is not None
+    if has_coordinates:
+        safety_score, risk_level, details = calculate_risk_score(float(plot.latitude), float(plot.longitude))
+        return {
+            "risk_score": f"{risk_level} (Score: {safety_score})",
+            "risk_level": risk_level,
+            "safety_score": safety_score,
+            "description": plot.description or details,
+        }
+
+    legacy_score = parse_legacy_risk_score(plot.risk_score)
+    return {
+        "risk_score": plot.risk_score or "Unknown",
+        "risk_level": plot.risk_score.split(' (')[0] if plot.risk_score else 'Unknown',
+        "safety_score": legacy_score,
+        "description": plot.description or "",
+    }
+
+def serialize_plot(plot: models.Plot) -> dict:
+    risk_snapshot = get_plot_risk_snapshot(plot)
+    return {
+        "id": str(plot.id),
+        "name": plot.name,
+        "location": plot.location,
+        "price": plot.price,
+        "area": plot.area,
+        "image": plot.image_url,
+        "risk_score": risk_snapshot["risk_score"],
+        "risk_level": risk_snapshot["risk_level"],
+        "safety_score": risk_snapshot["safety_score"],
+        "description": risk_snapshot["description"],
+        "latitude": plot.latitude,
+        "longitude": plot.longitude,
+        "house_x": plot.house_x,
+        "house_z": plot.house_z,
+        "house_layout": plot.house_layout,
+        "sellerId": str(plot.seller_id),
+        "createdAt": plot.created_at.isoformat()
+    }
 @app.get("/api/plots")
 async def get_plots(limit: int = 20, offset: int = 0, user_id: Optional[int] = None, db: Session = Depends(get_db)):
     """
@@ -274,23 +401,7 @@ async def get_plots(limit: int = 20, offset: int = 0, user_id: Optional[int] = N
         total = query.count()
         plots = query.order_by(models.Plot.created_at.desc()).offset(offset).limit(limit).all()
         
-        all_plots = []
-        for plot in plots:
-            all_plots.append({
-                "id": str(plot.id),
-                "name": plot.name,
-                "location": plot.location,
-                "price": plot.price,
-                "area": plot.area,
-                "image": plot.image_url,
-                "risk_score": plot.risk_score,
-                "description": plot.description,
-                "house_x": plot.house_x,
-                "house_z": plot.house_z,
-                "house_layout": plot.house_layout,
-                "sellerId": str(plot.seller_id),
-                "createdAt": plot.created_at.isoformat()
-            })
+        all_plots = [serialize_plot(plot) for plot in plots]
         
         log_with_time(f"GET PLOTS SUCCESS: Returning {len(all_plots)} plots")
         return {
@@ -311,17 +422,21 @@ async def get_plot(plot_id: int, db: Session = Depends(get_db)):
     if not plot:
         raise HTTPException(status_code=404, detail="Plot not found")
         
-    return {
-        "id": plot.id,
-        "name": plot.name,
-        "glb_url": getattr(plot, 'glb_url', None) or None,
-        "thumbnail_url": plot.image_url
-    }
+    plot_payload = serialize_plot(plot)
+    plot_payload["id"] = plot.id
+    plot_payload["glb_url"] = getattr(plot, 'glb_url', None) or None
+    plot_payload["thumbnail_url"] = plot.image_url
+    return plot_payload
 
 class PlotUpdatePosition(BaseModel):
     house_x: float
     house_z: float
     house_layout: Optional[str] = None
+
+class PlotAdminUpdate(BaseModel):
+    price: Optional[str] = None
+    safety_score: Optional[float] = None
+    risk_level: Optional[str] = None
 @app.get("/api/plots/{plot_id}")
 async def get_plot(plot_id: int, db: Session = Depends(get_db)):
     plot = db.query(models.Plot).filter(models.Plot.id == plot_id).first()
@@ -330,12 +445,70 @@ async def get_plot(plot_id: int, db: Session = Depends(get_db)):
     if not plot:
         raise HTTPException(status_code=404, detail="Plot not found in database")
     
+    risk_snapshot = get_plot_risk_snapshot(plot)
+
     return {
         "id": plot.id,
         "name": getattr(plot, 'name', 'Unnamed Plot'),
-        "glb_url": getattr(plot, 'glb_url', None), # Safe way to check if column exists
-        "thumbnail_url": getattr(plot, 'thumbnail_url', None)
+        "location": plot.location,
+        "price": plot.price,
+        "area": plot.area,
+        "glb_url": getattr(plot, 'glb_url', None),
+        "thumbnail_url": getattr(plot, 'thumbnail_url', None),
+        "risk_score": risk_snapshot["risk_score"],
+        "risk_level": risk_snapshot["risk_level"],
+        "safety_score": risk_snapshot["safety_score"],
+        "description": risk_snapshot["description"],
+        "latitude": plot.latitude,
+        "longitude": plot.longitude
     }
+
+@app.delete("/api/plots/{plot_id}")
+async def delete_plot(plot_id: int, db: Session = Depends(get_db)):
+    """
+    Deletes a plot listing from the database.
+    """
+    log_with_time(f"DELETE PLOT: Attempting to delete ID {plot_id}")
+    plot = db.query(models.Plot).filter(models.Plot.id == plot_id).first()
+    
+    if not plot:
+        raise HTTPException(status_code=404, detail="Plot not found")
+        
+    db.delete(plot)
+    db.commit()
+    
+    return {"status": "success", "message": f"Plot {plot_id} deleted successfully"}
+
+@app.patch("/api/plots/{plot_id}")
+async def admin_update_plot(plot_id: int, payload: PlotAdminUpdate, db: Session = Depends(get_db)):
+    plot = db.query(models.Plot).filter(models.Plot.id == plot_id).first()
+    if not plot:
+        raise HTTPException(status_code=404, detail="Plot not found")
+
+    if payload.price is not None:
+        plot.price = payload.price
+
+    if payload.safety_score is not None:
+        score = float(payload.safety_score)
+        score = max(1.0, min(10.0, score))
+        plot.risk_override_score = score
+
+        if payload.risk_level:
+            plot.risk_override_level = payload.risk_level
+        else:
+            if score <= 3.5:
+                plot.risk_override_level = "High Risk"
+            elif score <= 7.0:
+                plot.risk_override_level = "Moderate Risk"
+            else:
+                plot.risk_override_level = "Safe"
+
+        plot.risk_score = f"{plot.risk_override_level} (Score: {round(score, 1)})"
+
+    db.add(plot)
+    db.commit()
+    db.refresh(plot)
+    return {"status": "success", "plot": serialize_plot(plot)}
 def save_to_db(plot_data: dict, image_url: str, seller_id: int):
     """Background task to save plot metadata to SQLite with Risk Analysis."""
     db = SessionLocal()
@@ -356,7 +529,10 @@ def save_to_db(plot_data: dict, image_url: str, seller_id: int):
             image_url=image_url,
             risk_score=risk_score_str,
             description=plot_data.get('description', ''),
-            seller_id=seller_id
+            latitude=lat,
+            longitude=lng,
+            seller_id=seller_id,
+            glb_url='/models/plots/plot1.glb' # Set default model for newly uploaded plots
         )
         db.add(new_plot)
         db.commit()

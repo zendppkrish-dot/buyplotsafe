@@ -7,6 +7,8 @@ import Marketplace from './pages/Marketplace';
 import Chat from './pages/Chat';
 import AddPlot from './pages/AddPlot';
 import PlotGallery from './pages/PlotGallery';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminLogin from './pages/AdminLogin';
 import { useEffect, useState } from 'react';
 import { checkConnection } from './api/client';
 
@@ -33,6 +35,8 @@ function App() {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/design/:id" element={<DesignViewer />} />
         <Route path="/view/:id" element={<PlotViewer />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
       </Routes>
     </Router>
   );

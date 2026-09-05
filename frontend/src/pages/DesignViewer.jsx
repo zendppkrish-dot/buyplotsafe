@@ -2,78 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AIGenerator from '../components/AIGenerator';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Search, Save, Trash2, Box, Home, Plus, Edit3, ShieldAlert } from 'lucide-react';
 import Breadcrumb from '../components/Breadcrumb';
+import RiskAnalysisCard from '../components/RiskAnalysisCard';
 
 const API = '/api';
 
-const RAW_CATALOG = {
-    houses: [
-        {
-            id: 'h1',
-            name: 'Modern Kerala Villa',
-            thumbnail: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=300&q=80',
-            modelUrl: '/models/houses/part_house1.glb',
-            format: 'glb'
-        },
-        {
-            id: 'modern-villa',
-            name: 'Modern Villa',
-            thumbnail: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=300&q=80',
-            glb_url: '/models/houses/part_house2.glb',
-            format: 'glb'
-        },
-        {
-            id: 'eco-lodge',
-            name: 'Eco Lodge',
-            thumbnail: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=300&q=80',
-            glb_url: '/models/houses/part_house3.glb',
-            format: 'glb'
-        }
-    ],
-    parts: [
-        { 
-            id: 'part_barricade_doorway_a', 
-            name: 'Barricade Doorway A', 
-            thumbnail: 'https://images.unsplash.com/photo-1598440939527-810a9f0dff56?auto=format&fit=crop&w=300&q=80',
-            glb_url: '/models/parts/Barricade/part_barricade_doorway_a.fbx', 
-            type: 'part', 
-            format: 'fbx' 
-        },
-        { 
-            id: 'part_border', 
-            name: 'Border', 
-            thumbnail: 'https://images.unsplash.com/photo-1590069230002-df267a0bb8d3?auto=format&fit=crop&w=300&q=80',
-            glb_url: '/models/parts/Border/part_border.fbx', 
-            type: 'part', 
-            format: 'fbx' 
-        },
-        { 
-            id: 'part_column', 
-            name: 'Column', 
-            thumbnail: 'https://images.unsplash.com/photo-1590069230002-df267a0bb8d3?auto=format&fit=crop&w=300&q=80',
-            glb_url: '/models/parts/Column/part_column.fbx', 
-            type: 'part', 
-            format: 'fbx' 
-        },
-        { 
-            id: 'part_plating', 
-            name: 'Plating', 
-            thumbnail: 'https://images.unsplash.com/photo-1632759162353-19c9a540feb7?auto=format&fit=crop&w=300&q=80',
-            glb_url: '/models/parts/Corrugated Iron Sheet/part_plating.fbx', 
-            type: 'part', 
-            format: 'fbx' 
-        },
-        { 
-            id: 'part_floor', 
-            name: 'Floor', 
-            thumbnail: 'https://images.unsplash.com/photo-1632759162353-19c9a540feb7?auto=format&fit=crop&w=300&q=80',
-            glb_url: '/models/parts/Floor/part_floor.fbx', 
-            type: 'part', 
-            format: 'fbx' 
-        }
-    ],
-};
+import { RAW_CATALOG } from '../data/catalog';
+
+const DEFAULT_HOUSE_SCALE = [1, 1, 1];
+const DEFAULT_PART_SCALE = [1, 1, 1];
 
 export default function DesignViewer() {
     const [interactionMode, setInteractionMode] = useState('translate');
@@ -84,9 +22,11 @@ export default function DesignViewer() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const [activeTab, setActiveTab] = useState('Base');
+    const [activeTab, setActiveTab] = useState('Houses');
+    const [searchTerm, setSearchTerm] = useState('');
     const [sceneObjects, setSceneObjects] = useState([]);
     const [selectedHouse, setSelectedHouse] = useState(null);
+    const [selectedPlotData, setSelectedPlotData] = useState(null);
     const [transform, setTransform] = useState({ x: 0, y: 0, z: 0, scale: 1, rotation: 0 });
 
     useEffect(() => {
@@ -96,8 +36,44 @@ export default function DesignViewer() {
                 setLoading(true);
                 const token = localStorage.getItem('token');
                 const headers = token ? { Authorization: `Bearer ${token}` } : {};
-                const { data } = await axios.get(`${API}/plots/${id}`, { headers });
-                setPlotData(data);
+                
+                let rawData = null;
+                try {
+                    const { data } = await axios.get(`${API}/plots/${id}`, { headers });
+                    rawData = data;
+                } catch (apiErr) {
+                    // Fallback to localStorage for admin-added plots
+                    const saved = localStorage.getItem('admin_plots');
+                    if (saved) {
+                        const localPlots = JSON.parse(saved);
+                        const found = localPlots.find(p => String(p.id) === String(id));
+                        if (found) {
+                            rawData = found;
+                        } else {
+                            throw apiErr;
+                        }
+                    } else {
+                        throw apiErr;
+                    }
+                }
+
+                if (rawData) {
+                    // Normalize data (handle both backend snake_case and local camelCase)
+                    const parsedRiskScore = (() => {
+                        const rawRisk = rawData.risk_score || rawData.riskScore || '';
+                        const match = String(rawRisk).match(/Score:\s*([\d.]+)/);
+                        return match ? parseFloat(match[1]) : undefined;
+                    })();
+
+                    const normalized = {
+                        ...rawData,
+                        safety_score: rawData.safety_score ?? rawData.safetyScore ?? parsedRiskScore ?? (rawData.riskLevel === 'High' ? 2.5 : rawData.riskLevel === 'Moderate' ? 5.5 : 0),
+                        risk_level: rawData.risk_level ?? rawData.riskLevel ?? 'Unknown',
+                        description: rawData.description ?? rawData.desc ?? 'Geospatial risk assessment verified.'
+                    };
+                    setPlotData(normalized);
+                    setSelectedPlotData(normalized);
+                }
             } catch (err) {
                 if (err.response?.status === 401) {
                     navigate('/login');
@@ -182,9 +158,15 @@ export default function DesignViewer() {
         );
     }
 
-    const catalogItems = activeTab === 'Base'
-        ? (RAW_CATALOG?.houses ?? [])
-        : (RAW_CATALOG?.parts ?? []);
+    const baseItems = activeTab === 'Plots'
+        ? (RAW_CATALOG?.plots || [])
+        : activeTab === 'Houses'
+            ? (RAW_CATALOG?.houses || [])
+            : (RAW_CATALOG?.parts || []);
+
+    const catalogItems = baseItems.filter(item =>
+        (item?.name || '').toLowerCase().includes((searchTerm || '').toLowerCase())
+    );
 
     // ── Main UI ──
     return (
@@ -209,7 +191,7 @@ export default function DesignViewer() {
                         <div>
                             <h1 className="text-4xl font-extrabold text-white tracking-tight">Design Studio</h1>
                             <p className="text-slate-500 text-xs mt-1 uppercase tracking-wider font-semibold opacity-50">
-                                Antigravity AI View · Plot #{plotData.id}
+                                Antigravity AI View · Plot #{plotData?.id || id}
                             </p>
                         </div>
                     </div>
@@ -224,16 +206,25 @@ export default function DesignViewer() {
                     {/* AIGenerator provides its own HUD, removed duplicate static badge */}
                     <AIGenerator
                         plotId={plotData.id}
+                        selectedPlot={selectedPlotData}
                         modelUrl={plotData?.glb_url}
                         plotImage={plotData.thumbnail_url || 'https://images.unsplash.com/photo-1524813686514-a57563d77965'}
                         sceneObjects={sceneObjects}
                         interactionMode={interactionMode}
+                        selectedObjectId={selectedHouse?.instanceId}
+                        onSelectObject={(object) => setSelectedHouse(object)}
                         onUpdateObject={(instanceId, newPosition, newRotation, newScale) => {
-                            setSceneObjects(prev => prev.map(obj =>
-                                obj.instanceId === instanceId
-                                    ? { ...obj, position: newPosition, rotation: newRotation, scale: newScale }
-                                    : obj
-                            ));
+                            setSceneObjects(prev => prev.map(obj => {
+                                if (obj.instanceId !== instanceId) {
+                                    return obj;
+                                }
+
+                                const updatedObject = { ...obj, position: newPosition, rotation: newRotation, scale: newScale };
+                                if (selectedHouse?.instanceId === instanceId) {
+                                    setSelectedHouse(updatedObject);
+                                }
+                                return updatedObject;
+                            }));
                         }}
                     />
                 </div>
@@ -243,7 +234,7 @@ export default function DesignViewer() {
 
                     {/* Tab Navigation */}
                     <div className="flex border-b border-white/5 bg-[#111318]">
-                        {['Base', 'Parts'].map((tab) => (
+                        {['Safety', 'Houses', 'Parts'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -252,15 +243,44 @@ export default function DesignViewer() {
                                     : 'text-slate-500 hover:text-slate-300'
                                     }`}
                             >
-                                {tab === 'Base' ? '🏠' : '📦'} {tab}
+                                {tab === 'Safety' ? '🛡️' : tab === 'Houses' ? '🏠' : '📦'} {tab}
                             </button>
                         ))}
                     </div>
 
                     {/* Tools */}
-                    <div className="p-5 space-y-6 flex-1 overflow-y-auto">
+                    <div className="p-5 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
 
-                        {/* Transform Controls */}
+                        {/* Tab-specific content */}
+                        {activeTab === 'Safety' ? (
+                            <div className="space-y-6 pb-20">
+                                <RiskAnalysisCard 
+                                    safetyScore={plotData?.safety_score || 0}
+                                    riskLevel={plotData?.risk_level}
+                                    description={plotData?.description}
+                                />
+                                
+                                <div className="p-5 bg-white/5 rounded-2xl border border-white/5">
+                                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">KSDMA Analysis Data</h4>
+                                    <p className="text-[10px] text-slate-400 leading-relaxed italic">
+                                        "{plotData?.description || 'All geospatial parameters verified against the latest KSDMA hazard reports.'}"
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Search Bar */}
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder={`Search ${activeTab.toLowerCase()}...`}
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full bg-[#0f1116] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                                    />
+                                </div>
+
+                                {/* Transform Controls */}
                         <div className="flex bg-[#0f1116] p-1.5 rounded-2xl border border-white/5 shadow-inner">
                             {['translate', 'rotate', 'scale'].map((mode) => (
                                 <button
@@ -274,13 +294,13 @@ export default function DesignViewer() {
                             ))}
                         </div>
 
-                        {/* Asset Grid */}
-                        <div className="space-y-4">
-                            <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-4">
-                                {activeTab === 'Base' ? 'Pre-Model Houses' : 'Structural Parts'}
-                                <span className="h-px flex-1 bg-white/5" />
-                            </h4>
-                            <div className="grid grid-cols-2 gap-4">
+                                {/* Asset Grid */}
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-4">
+                                        {activeTab === 'Houses' ? 'Pre-Model Houses' : 'Structural Parts'}
+                                        <span className="h-px flex-1 bg-white/5" />
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-4">
                                 {catalogItems.map((item) => (
                                     <div
                                         key={item.id}
@@ -291,11 +311,16 @@ export default function DesignViewer() {
                                                 ...item,
                                                 instanceId: Date.now(),
                                                 modelUrl: item.modelUrl || item.glb_url,
-                                                position: item.type === 'part' ? [0, 0.01, 0] : [0, -1, 0],
-                                                rotation: [0, 0, 0],
-                                                scale: item.type === 'part' ? [0.5, 0.5, 0.5] : [0.1, 0.1, 0.1]
+                                                position: [6, -1, 0],
+                                                // Rotation values in three.js are radians.
+                                                // Convert the intended -200deg default orientation.
+                                                rotation: [0, (150 * Math.PI) / -50, 0],
+                                                scale: item.type === 'part' ? DEFAULT_PART_SCALE : DEFAULT_HOUSE_SCALE
                                             };
                                             setSelectedHouse(newObject);
+                                            if (item.type === 'plot') {
+                                                setSelectedPlotData(item);
+                                            }
                                             setSceneObjects(prev => [...prev, newObject]);
                                         }}
                                         className="group cursor-pointer"
@@ -343,13 +368,14 @@ export default function DesignViewer() {
                             )}
                         </div>
 
-                        {/* Save Button */}
-                        <button
-                            onClick={handleSave}
-                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-95 transition-all"
-                        >
-                            Confirm &amp; Save Design
-                        </button>
+                                <button
+                                    onClick={handleSave}
+                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-95 transition-all"
+                                >
+                                    Confirm &amp; Save Design
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     {/* Footer */}

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>package</title>
   </head>
-  <body>
+  <body><script>window.onerror = function(msg, url, line, col, error) { document.body.innerHTML += \"<div style='color:red;font-size:20px;z-index:9999;position:absolute;top:0;background:black;padding:20px;'>\" + msg + \"<br>\" + error?.stack + \"</div>\"; }; window.onunhandledrejection = function(e) { document.body.innerHTML += \"<div style='color:red;font-size:20px;z-index:9999;position:absolute;top:50%;background:black;padding:20px;'>\" + e.reason + \"</div>\"; };</script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

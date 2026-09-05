@@ -5,19 +5,32 @@ import { MapPin, ShieldCheck, Box } from 'lucide-react';
 const PlotCard = ({ plot }) => {
   const navigate = useNavigate();
   
-  // Parse risk score carefully as per instructions
-  const score = parseFloat(plot.risk_score || 0);
-  
-  // Scoring rules: <= 3 (red), 4-6 (amber), 7-10 (green)
+  // Handle both backend risk_score string and admin riskLevel string
+  let score = plot.safety_score || parseFloat(plot.risk_score || 0);
   let riskColor = '#10b981'; // Default green
-  let riskLabel = 'Safe';
-  
-  if (score <= 3) {
-    riskColor = '#ef4444';
-    riskLabel = 'High Risk';
-  } else if (score <= 6) {
-    riskColor = '#f59e0b';
-    riskLabel = 'Moderate';
+  let riskLabel = plot.risk_level || 'Safe';
+
+  if (plot.riskLevel) {
+    riskLabel = plot.riskLevel;
+    if (riskLabel === 'High') {
+        riskColor = '#ef4444';
+        score = 2.0;
+    } else if (riskLabel === 'Moderate') {
+        riskColor = '#f59e0b';
+        score = 5.0;
+    } else {
+        riskColor = '#10b981';
+        score = 9.0;
+    }
+  } else {
+    // Scoring rules: <= 3.5 (red), 3.6-7.0 (amber), 7.1-10 (green)
+    if (score <= 3.5) {
+      riskColor = '#ef4444';
+      riskLabel = 'High Risk';
+    } else if (score <= 7.0) {
+      riskColor = '#f59e0b';
+      riskLabel = 'Moderate';
+    }
   }
   
   const handleView = () => {

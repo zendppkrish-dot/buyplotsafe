@@ -2,60 +2,136 @@ import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stage, OrbitControls, Gltf, useGLTF, useFBX, TransformControls, Environment, Center } from '@react-three/drei';
 import { Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
+import RiskAnalysisOverlay from './RiskAnalysisOverlay';
+import * as THREE from 'three';
 
-function GLTFObject({ object, url, interactionMode, onUpdateObject, ...props }) {
+const TARGET_MODEL_SIZE = {
+  house: 3.6,
+  part: 0.9,
+  default: 2.0,
+};
+
+function NormalizedObject({ object, scene, interactionMode, onUpdateObject, onSelectObject, orbitControlsRef, isSelected, ...props }) {
+  const groupRef = useRef();
+  const dragPlane = React.useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
+  const dragOffsetRef = useRef(new THREE.Vector3());
+  const isDraggingRef = useRef(false);
+
+  const normalizedScene = React.useMemo(() => {
+    const clonedScene = scene.clone();
+    const bounds = new THREE.Box3().setFromObject(clonedScene);
+    const size = bounds.getSize(new THREE.Vector3());
+    const center = bounds.getCenter(new THREE.Vector3());
+    const maxDimension = Math.max(size.x, size.y, size.z, 0.001);
+    const targetSize = TARGET_MODEL_SIZE[object?.type] || TARGET_MODEL_SIZE.default;
+    const normalizationFactor = targetSize / maxDimension;
+
+    clonedScene.position.sub(center);
+    clonedScene.position.y += size.y / 2;
+    clonedScene.scale.setScalar(normalizationFactor);
+    return clonedScene;
+  }, [object?.type, scene]);
+
+  const syncObject = () => {
+    if (!groupRef.current || !onUpdateObject) {
+      return;
+    }
+
+    onUpdateObject(
+      object.instanceId,
+      groupRef.current.position.toArray(),
+      groupRef.current.rotation.toArray(),
+      groupRef.current.scale.toArray()
+    );
+  };
+
+  const handlePointerDown = (event) => {
+    event.stopPropagation();
+    onSelectObject?.(object);
+
+    if (object.type !== 'part' || !groupRef.current) {
+      return;
+    }
+
+    const hitPoint = new THREE.Vector3();
+    if (!event.ray.intersectPlane(dragPlane, hitPoint)) {
+      return;
+    }
+
+    isDraggingRef.current = true;
+    dragOffsetRef.current.copy(hitPoint).sub(groupRef.current.position);
+
+    if (orbitControlsRef?.current) {
+      orbitControlsRef.current.enabled = false;
+    }
+  };
+
+  const handlePointerMove = (event) => {
+    if (!isDraggingRef.current || object.type !== 'part' || !groupRef.current) {
+      return;
+    }
+
+    event.stopPropagation();
+    const hitPoint = new THREE.Vector3();
+    if (!event.ray.intersectPlane(dragPlane, hitPoint)) {
+      return;
+    }
+
+    const nextPosition = hitPoint.sub(dragOffsetRef.current);
+    groupRef.current.position.set(nextPosition.x, groupRef.current.position.y, nextPosition.z);
+    syncObject();
+  };
+
+  const stopDragging = (event) => {
+    event?.stopPropagation?.();
+    if (!isDraggingRef.current) {
+      return;
+    }
+
+    isDraggingRef.current = false;
+    if (orbitControlsRef?.current) {
+      orbitControlsRef.current.enabled = true;
+    }
+    syncObject();
+  };
+
+  const objectNode = (
+    <group
+      ref={groupRef}
+      position={object.position || [6, 1, 0]}
+      rotation={object.rotation || [0, 0, 0]}
+      scale={object.scale || [1, 1, 1]}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={stopDragging}
+      onPointerOut={stopDragging}
+    >
+      <primitive object={normalizedScene} dispose={null} {...props} />
+    </group>
+  );
+
+  if (!isSelected) {
+    return objectNode;
+  }
+
+  return (
+    <TransformControls mode={interactionMode} onMouseUp={syncObject}>
+      {objectNode}
+    </TransformControls>
+  );
+}
+
+function GLTFObject({ object, url, interactionMode, onUpdateObject, onSelectObject, orbitControlsRef, isSelected, ...props }) {
   const gltf = useGLTF(url);
-  const clonedScene = React.useMemo(() => gltf.scene.clone(), [gltf.scene]);
-  const groupRef = useRef();
-
-  return (
-    <TransformControls 
-      mode={interactionMode} 
-      onMouseUp={() => {
-        if (groupRef.current && onUpdateObject) {
-          onUpdateObject(
-            object.instanceId, 
-            groupRef.current.position.toArray(), 
-            groupRef.current.rotation.toArray(), 
-            groupRef.current.scale.toArray()
-          );
-        }
-      }}
-    >
-      <group ref={groupRef} position={object.position || [0, 0, 0]} rotation={object.rotation || [0, 0, 0]} scale={object.scale || [1, 1, 1]}>
-        <primitive object={clonedScene} dispose={null} {...props} />
-      </group>
-    </TransformControls>
-  );
+  return <NormalizedObject object={object} scene={gltf.scene} interactionMode={interactionMode} onUpdateObject={onUpdateObject} onSelectObject={onSelectObject} orbitControlsRef={orbitControlsRef} isSelected={isSelected} {...props} />;
 }
 
-function FBXObject({ object, url, interactionMode, onUpdateObject, ...props }) {
+function FBXObject({ object, url, interactionMode, onUpdateObject, onSelectObject, orbitControlsRef, isSelected, ...props }) {
   const fbx = useFBX(url);
-  const clonedScene = React.useMemo(() => fbx.clone(), [fbx]);
-  const groupRef = useRef();
-
-  return (
-    <TransformControls 
-      mode={interactionMode} 
-      onMouseUp={() => {
-        if (groupRef.current && onUpdateObject) {
-          onUpdateObject(
-            object.instanceId, 
-            groupRef.current.position.toArray(), 
-            groupRef.current.rotation.toArray(), 
-            groupRef.current.scale.toArray()
-          );
-        }
-      }}
-    >
-      <group ref={groupRef} position={object.position || [0, 0, 0]} rotation={object.rotation || [0, 0, 0]} scale={object.scale || [1, 1, 1]}>
-        <primitive object={clonedScene} dispose={null} {...props} />
-      </group>
-    </TransformControls>
-  );
+  return <NormalizedObject object={object} scene={fbx} interactionMode={interactionMode} onUpdateObject={onUpdateObject} onSelectObject={onSelectObject} orbitControlsRef={orbitControlsRef} isSelected={isSelected} {...props} />;
 }
 
-function SceneObject({ object, interactionMode, onUpdateObject, ...props }) {
+function SceneObject({ object, interactionMode, onUpdateObject, onSelectObject, orbitControlsRef, isSelected, ...props }) {
   const url = object?.modelUrl || object?.glb_url || object?.url || object;
 
   // Check explicit format field first (from catalog), then fall back to URL extension
@@ -66,9 +142,9 @@ function SceneObject({ object, interactionMode, onUpdateObject, ...props }) {
   console.log('Rendering object:', url, '| format:', object?.format, '| isFBX:', isFBX);
 
   return isFBX ? (
-    <FBXObject object={object} url={url} interactionMode={interactionMode} onUpdateObject={onUpdateObject} {...props} />
+    <FBXObject object={object} url={url} interactionMode={interactionMode} onUpdateObject={onUpdateObject} onSelectObject={onSelectObject} orbitControlsRef={orbitControlsRef} isSelected={isSelected} {...props} />
   ) : (
-    <GLTFObject object={object} url={url} interactionMode={interactionMode} onUpdateObject={onUpdateObject} {...props} />
+    <GLTFObject object={object} url={url} interactionMode={interactionMode} onUpdateObject={onUpdateObject} onSelectObject={onSelectObject} orbitControlsRef={orbitControlsRef} isSelected={isSelected} {...props} />
   );
 }
 export default function AIGenerator({
@@ -76,13 +152,21 @@ export default function AIGenerator({
   plotImage = "https://images.unsplash.com/photo-1524813686514-a57563d77965?auto=format&fit=crop&q=80&w=1200",
   sceneObjects = [],
   interactionMode = 'translate',
-  onUpdateObject
+  onUpdateObject,
+  onSelectObject,
+  selectedObjectId,
+  selectedPlot,
+  modelUrl: propModelUrl
 }) {
   const [state, setState] = useState('Idle'); // 'Idle', 'Generating', 'Done'
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('Scanning Topography...');
+  const orbitControlsRef = useRef(null);
 
-  const modelUrl = `/models/plots/plot${plotId}.glb`;
+  // Prioritize passed modelUrl, fallback to pattern-based path
+  // If plotId is a number > 6 (not in catalog), fallback to plot1.glb
+  const modelUrl = propModelUrl || 
+                   (parseInt(plotId) > 6 ? '/models/plots/plot1.glb' : `/models/plots/plot${plotId}.glb`);
 
   useEffect(() => {
     if (state === 'Generating') {
@@ -126,7 +210,7 @@ export default function AIGenerator({
                 <div className="mb-6 inline-flex p-4 rounded-3xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
                   <Sparkles className="w-10 h-10" />
                 </div>
-                <h2 className="text-4xl font-black text-white mb-4 tracking-tight">Antigravity AI Engine</h2>
+                <h2 className="text-4xl font-black text-white mb-4 tracking-tight">Generate 3D Plot</h2>
                 <p className="text-slate-400 mb-10 max-w-lg mx-auto text-sm font-medium leading-relaxed">
                   Transform this static 2D blueprint into an immersive, interactive 3D digital twin using our proprietary spatial AI pipeline.
                 </p>
@@ -137,7 +221,7 @@ export default function AIGenerator({
                   <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
                   <span className="relative z-10 flex items-center gap-2">
                     <Sparkles className="w-4 h-4" />
-                    Generate AI 3D
+                    Generate 3D Plot
                   </span>
                 </button>
               </div>
@@ -162,7 +246,7 @@ export default function AIGenerator({
                   </div>
                 </div>
                 <p className="text-[9px] text-slate-500 mt-5 text-center uppercase tracking-widest font-black opacity-60">
-                  Antigravity Spatial Core
+                  Plot Generator
                 </p>
               </div>
             )}
@@ -179,18 +263,26 @@ export default function AIGenerator({
               <Suspense fallback={null}>
                 <Environment preset="city" />
                 <Center disableY position={[0, -0.1, 0]}>
-                  <Gltf src={modelUrl} scale={[8, 8, 8]} />
+                  <Gltf src={modelUrl} scale={[9, 9, 9]} />
                 </Center>
                 <group>
                   <Suspense fallback={null}>
                     {sceneObjects.map((obj) => (
-                      <SceneObject key={obj.instanceId} object={obj} interactionMode={interactionMode} onUpdateObject={onUpdateObject} />
+                      <SceneObject
+                        key={obj.instanceId}
+                        object={obj}
+                        interactionMode={interactionMode}
+                        onUpdateObject={onUpdateObject}
+                        onSelectObject={onSelectObject}
+                        orbitControlsRef={orbitControlsRef}
+                        isSelected={selectedObjectId === obj.instanceId}
+                      />
                     ))}
                   </Suspense>
                 </group>
               </Suspense>
 
-              <OrbitControls makeDefault enablePan={false} maxPolarAngle={Math.PI / 2.1} />
+              <OrbitControls ref={orbitControlsRef} makeDefault enablePan={false} maxPolarAngle={Math.PI / 2.1} />
             </Canvas>
           )}
 
@@ -204,6 +296,11 @@ export default function AIGenerator({
             </div>
           )}
         </div>
+        
+        {/* Risk Analysis Overlay - Persistent visibility within viewport */}
+        {selectedPlot && (
+          <RiskAnalysisOverlay plotId={selectedPlot.id} />
+        )}
       </div>
     </div>
   );
