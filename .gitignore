@@ -16,6 +16,10 @@ dist-ssr
 __pycache__/
 *.py[cod]
 *.db
+backend/credentials.json
+.env
+.env.*
+static/.env/
 
 # Editor directories and files
 .vscode/*
